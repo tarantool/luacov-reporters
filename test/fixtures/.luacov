@@ -1,0 +1,3 @@
+statsfile = '../../tmp/test.luacov.stats.out'
+reportfile = '../../tmp/test.luacov.report.out'
+include = {'/fixtures/'}

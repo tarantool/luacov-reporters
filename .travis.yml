@@ -1,0 +1,48 @@
+os: linux
+dist: xenial
+language: shell
+
+env:
+  global:
+    - TARANTOOL_VERSION=2x
+    - ROCK_NAME=luacov-reporters
+
+stages:
+  - test
+  - name: deploy
+    if: (type = push) AND (branch = master OR tag IS present)
+
+before_script:
+  - git describe --long || true
+
+jobs:
+  include:
+    - stage: test
+      before_install:
+        - curl -L https://tarantool.io/installer.sh | VER=2.3 sudo -E bash
+        - sudo apt install tarantool-dev
+      script:
+        - make lint test
+    - stage: deploy
+      name: Publish rockspecs
+      script: skip
+      deploy:
+        - provider: script
+          script: curl --fail -X PUT -F rockspec=@$ROCK_NAME-scm-1.rockspec
+            https://$ROCKS_USERNAME:$ROCKS_PASSWORD@rocks.tarantool.org
+        - on:
+            tags: true
+          provider: script
+          script: cat $ROCK_NAME-scm-1.rockspec |
+            sed -E
+              -e "s/branch = '.+'/tag = '$TRAVIS_TAG'/g"
+              -e "s/version = '.+'/version = '$TRAVIS_TAG-1'/g" |
+            curl --fail -X PUT -F "rockspec=@-;filename=$ROCK_NAME-$TRAVIS_TAG-1.rockspec"
+              https://$ROCKS_USERNAME:$ROCKS_PASSWORD@rocks.tarantool.org
+
+notifications:
+  email:
+    recipients:
+      - build@tarantool.org
+    on_success: change
+    on_failure: always
