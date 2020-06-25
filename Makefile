@@ -1,7 +1,6 @@
 SHELL = /bin/bash
 # use gsed on macOs
-SED = $(shell which gsed 2> /dev/null)
-SED ?= sed
+SED := $(if $(shell which gsed 2> /dev/null), gsed, sed)
 
 ROCK_NAME = luacov-reporters
 ROCKS_UPLOAD_URL = https://$(ROCKS_USERNAME):$(ROCKS_PASSWORD)@rocks.tarantool.org
@@ -33,8 +32,8 @@ release-scm:
 
 PHONY: release-tag
 release-tag: build-tag
-	curl --fail -X PUT -F rockspec=@$(ROCK_NAME)-$(TAG)-1.rockspec	$(ROCKS_UPLOAD_URL)
-	curl --fail -X PUT -F rockspec=@$(ROCK_NAME)-$(TAG)-1.all.rock	$(ROCKS_UPLOAD_URL)
+	curl --fail -X PUT -F rockspec=@release/$(ROCK_NAME)-$(TAG)-1.rockspec	$(ROCKS_UPLOAD_URL)
+	curl --fail -X PUT -F rockspec=@release/$(ROCK_NAME)-$(TAG)-1.all.rock	$(ROCKS_UPLOAD_URL)
 
 PHONY: build-tag
 build-tag:
@@ -45,8 +44,8 @@ endif
 	echo "Building release \"$(TAG)\""
 	mkdir -p release
 	$(SED) -e "s/branch = '.\+'/tag = '$(TAG)'/g" \
-	    -e "s/version = '.\+'/version = '$(TAG)-1'/g" \
-	    $(ROCK_NAME)-scm-1.rockspec > release/$(ROCK_NAME)-$(TAG)-1.rockspec
+		-e "s/version = '.\+'/version = '$(TAG)-1'/g" \
+		$(ROCK_NAME)-scm-1.rockspec > release/$(ROCK_NAME)-$(TAG)-1.rockspec
 
 	tarantoolctl rocks make release/$(ROCK_NAME)-$(TAG)-1.rockspec
 	tarantoolctl rocks pack $(ROCK_NAME) $(TAG) && mv $(ROCK_NAME)-$(TAG)-1.all.rock release/
