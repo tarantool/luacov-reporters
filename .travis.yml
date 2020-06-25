@@ -1,0 +1,41 @@
+os: linux
+dist: xenial
+language: shell
+
+env:
+  global:
+    - TARANTOOL_VERSION=2x
+
+stages:
+  - test
+  - name: deploy
+    if: (type = push) AND (branch = master OR tag IS present)
+
+before_script:
+  - git describe --long || true
+
+jobs:
+  include:
+    - stage: test
+      before_install:
+        - curl -L https://tarantool.io/installer.sh | VER=2.3 sudo -E bash
+        - sudo apt install tarantool-dev
+      script:
+        - make lint test
+    - stage: deploy
+      name: Publish rockspecs
+      script: skip
+      deploy:
+        - provider: script
+          script: make release-scm
+        - on:
+            tags: true
+          provider: script
+          script: release-tag
+
+notifications:
+  email:
+    recipients:
+      - build@tarantool.org
+    on_success: change
+    on_failure: always

@@ -1,0 +1,7 @@
+/lua_modules
+/.luarocks
+/.rocks
+/release
+
+/tmp/*
+!/tmp/.keep
