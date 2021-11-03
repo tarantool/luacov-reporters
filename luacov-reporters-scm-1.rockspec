@@ -1,7 +1,7 @@
 package = 'luacov-reporters'
 version = 'scm-1'
 source = {
-    url = 'git://github.com/tarantool/luacov-reporters.git',
+    url = 'git+https://github.com/tarantool/luacov-reporters.git',
     branch = 'master',
 }
 description = {
